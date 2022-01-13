@@ -1,0 +1,15 @@
+[
+	{
+		"Node": 3,
+		"StepSize": ,
+		"StepTime": 60.0,
+		"StartTime": 0.0,
+		"StartX": 65,
+		"StartY": 150,
+		"Path": [
+			{"Direction": "S", "Steps": 1},
+			{"Direction": "U", "Steps": 1},
+			{"Direction": "S", "Steps": 10}
+		]
+	}
+]
