@@ -303,19 +303,18 @@ def generate_radar_solutions():
     N = 5  # properties in radar chart
     factory = radar_factory(N, frame="polygon")
 
-    prop_labels = ['Communication downtime', 'Versatility', 'Data throughput', 'Energy efficiency', 'Feasibility']
+    prop_labels = ['Communication downtime', 'Versatility', 'Data overhead', 'Energy efficiency', 'Feasibility']
     data = [
         # Values correspond to properties as indexed in prop_labels
-        ("EB Channel Prediction w/scheduling", [2, 3, 5, 1, 3]),
-        ("EB Channel Prediction w/Shorter Timeout Periods", [1, 4, 2, 5, 2]),
-        ("2D Triangulation", [3, 2, 4, 4, 1]),
-        ("Join on 1st EB then Evaluate", [4, 5, 2, 3, 5]),
-        ("Fixed EB Broadcast Channel", [1, 3, 3, 3, 5])
+        ("Fixed EB broadcast channel", [5, 1, 3, 4, 5]),
+        ("Post association evaluation", [4, 2, 2, 4, 4]),
+        ("EB channel prediction", [4, 5, 2, 5, 3]),
+        ("Physical location triangulation", [1, 2, 2, 2, 1])
     ]
 
-    fig, axs = plt.subplots(figsize=(10, 10), nrows=2, ncols=2, subplot_kw=dict(projection="radar"))
+    fig, axs = plt.subplots(figsize=(12, 10), nrows=2, ncols=2, subplot_kw=dict(projection="radar"))
     fig.subplots_adjust(wspace=0.25, hspace=0.5, top=0.85, bottom=0.05)
-    fig.delaxes(axs[2][1])
+    # fig.delaxes(axs[2][1])
     colors = ['b', 'r', 'g', 'm', 'y']
     title = data[0][0]
 
@@ -428,9 +427,9 @@ with open("results/results-join-power.csv") as csv_file:
     #generate_box_compare_custom_and_classic_jointime(tests, "", ax)
     # generate_line_compare_custom_and_classic_jointime(tests, "", ax)
     #generate_bar_compare_custom_and_classic_jointime(tests, "", ax)
-    generate_bar_compare_custom_and_classic_rejoin()
+    # generate_bar_compare_custom_and_classic_rejoin()
     # generate_bar_compare_custom_and_classic_power_consumption(tests, "", ax)
-    #generate_radar_solutions()
+    generate_radar_solutions()
     # generate_radar_compare_solutions()
 
     #generate_bar_compare_custom_and_classic_jointime(nodes_5_tests, "Seconds", ax[0][1])
