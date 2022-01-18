@@ -29,6 +29,8 @@ class Test:
         self.radio_rx_pct = float(row['radio_rx_pct']) if 'radio_rx_pct' in row.keys() and row['radio_rx_pct'] != '' else None
         self.radio_int_time = float(row['radio_int_time']) if 'radio_int_time' in row.keys() and row['radio_int_time'] != '' else None
         self.radio_int_pct = float(row['radio_int_pct']) if 'radio_int_pct' in row.keys() and row['radio_int_pct'] != '' else None
+        self.rejoin_time = float(row['rejoin_time']) if 'rejoin_time' in row.keys() and row['rejoin_time'] != '' else None
+        self.rejoin_duration = float(row['rejoin_duration']) if 'rejoin_duration' in row.keys() and row['rejoin_duration'] != '' else None
         self.rows = []
 
     def add_row(self, row):
@@ -76,25 +78,51 @@ def generate_bar_compare_custom_and_classic_jointime_after_first_EB(tests, title
 def generate_bar_compare_custom_and_classic_jointime(tests, title, ax):
     custom_parents_considered = [np.mean([float(i['join_time'])-180 for i in o.rows]) for o in tests if o.tsch_ver == "custom"]
     classic_parent_considered = [np.mean([float(i['join_time'])-180 for i in o.rows]) for o in tests if o.tsch_ver == "classic"]
+
+    custom_first_eb_time = [np.mean([float(i['eb_first_time'])-180 for i in o.rows]) for o in tests if o.tsch_ver == "custom"]
+    classic_first_eb_time = [np.mean([float(i['eb_first_time'])-180 for i in o.rows]) for o in tests if o.tsch_ver == "classic"]
+
     custom_parents_considered = np.round(custom_parents_considered, 1)
     classic_parent_considered = np.round(classic_parent_considered, 1)
+
+    custom_first_eb_time = np.round(custom_first_eb_time, 1)
+    classic_first_eb_time = np.round(classic_first_eb_time, 1)
 
     x = np.arange(len(custom_parents_considered))
     labels = [o.nodes-1 for o in tests if o.tsch_ver == "custom"]
 
     width = 0.2
-    cust_bar = ax.bar(x-width/2, custom_parents_considered, width, label="Custom")
-    clas_bar = ax.bar(x+width/2, classic_parent_considered, width, label="Classic")
+    cust_bar = ax.bar(x-width/2, custom_parents_considered, width, label="Custom v. join", edgecolor="white")
+    clas_bar = ax.bar(x+width/2, classic_parent_considered, width, label="Classic v. join", edgecolor="white")
+    cust_feb_bar = ax.bar(x-width/2, custom_first_eb_time, width, label="First EB", color="dimgray", edgecolor="white")
+    clas_feb_bar = ax.bar(x+width/2, classic_first_eb_time, width, color="dimgray", edgecolor="white", tick_label="test")
 
     ax.set_xlabel('Possible parents')
-    ax.set_ylabel('Join time (s)')
+    ax.set_ylabel('Time (s)')
     ax.set_ylim([0, max(classic_parent_considered)*1.3])
+
     ax.set_xticks(x, labels)
     ax.set_title(title)
     ax.legend()
 
+    autolabel(cust_feb_bar)
+    autolabel(clas_feb_bar)
+
     ax.bar_label(cust_bar, padding=3)
     ax.bar_label(clas_bar, padding=3)
+
+    #ax.bar_label(cust_feb_bar, padding=3)
+    #ax.bar_label(clas_feb_bar, padding=3)
+
+def autolabel(rects):
+    """
+    Attach a text label above each bar displaying its height
+    """
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()/2.,height-10,
+                '%.1f' % float(height),
+                ha='center', va='bottom', color='white')
 
 def generate_line_compare_custom_and_classic_jointime(tests, title, ax):
     custom_parents_considered = [np.mean([float(i['join_time'])-180 for i in o.rows]) for o in tests if o.tsch_ver == "custom"]
@@ -152,7 +180,7 @@ def generate_box_compare_custom_and_classic_jointime(tests, title, ax):
 
     plt.xticks(range(0, len(labels) * 2, 2), labels)
     plt.xlim(-2, len(labels) * 2)
-    plt.ylim(0, 400)
+    plt.ylim(0, 450)
     plt.tight_layout()
 
 def generate_bar_compare_custom_and_classic_timeout(tests, title, ax):
@@ -177,6 +205,7 @@ def generate_bar_compare_custom_and_classic_timeout(tests, title, ax):
 
     ax.bar_label(cust_bar, padding=3)
     ax.bar_label(clas_bar, padding=3)
+
 
 def generate_bar_compare_custom_and_classic_channel(tests, title, ax):
     tests.sort(key=lambda x: x.hop_seq)
@@ -311,6 +340,59 @@ def generate_radar_solutions():
     plt.show()
     fig.savefig(f"plots/radar.svg", bbox_inches="tight")
 
+def generate_bar_compare_custom_and_classic_rejoin():
+    testsclassic = []
+    testscustom = []
+    with open("results/results-join-power.csv") as csv_file:
+        csv_data = csv.DictReader(csv_file)
+        current_test = 0
+        for row in csv_data:
+            if row['tsch_ver'] == "custom":
+                continue
+            if(current_test == 0 or current_test.different_test(row)):
+                test = Test(row)
+                testsclassic.append(test)
+                current_test = test
+
+            testsclassic[len(testsclassic) - 1].add_row(row)
+
+    with open("results/rejoin-data.csv") as csv_file:
+        csv_data = csv.DictReader(csv_file)
+        current_test = 0
+        for row in csv_data:
+            if(current_test == 0 or current_test.different_test(row)):
+                test = Test(row)
+                testscustom.append(test)
+                current_test = test
+
+            testscustom[len(testscustom) - 1].add_row(row)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(20, 10))
+    plt.suptitle("Comparison of average re-join time in networks with various possible parents", fontsize = 16)
+    custom_parents_considered = [np.mean([float(i['rejoin_duration']) for i in o.rows]) for o in testscustom if o.tsch_ver == "rejoin"]
+    classic_parent_considered = [np.mean([float(i['join_time'])-180 for i in o.rows]) for o in testsclassic if o.tsch_ver == "classic"]
+    custom_parents_considered = np.round(custom_parents_considered, 1)
+    classic_parent_considered = np.round(classic_parent_considered, 1)
+
+    x = np.arange(len(custom_parents_considered))
+    labels = [o.nodes-1 for o in tests if o.tsch_ver == "custom"]
+
+    width = 0.2
+    cust_bar = ax.bar(x-width/2, custom_parents_considered, width, label="Custom")
+    clas_bar = ax.bar(x+width/2, classic_parent_considered, width, label="Classic")
+
+    ax.set_xlabel('Possible parents')
+    ax.set_ylabel('Time (s)')
+    ax.set_ylim([0, max(classic_parent_considered)*1.3])
+    ax.set_xticks(x, labels)
+    ax.set_title("")
+    ax.legend()
+
+    ax.bar_label(cust_bar, padding=3)
+    ax.bar_label(clas_bar, padding=3)
+    plt.show()
+    fig.savefig(f"plots/test.svg", bbox_inches="tight")
+
 
 tests = []
 
@@ -339,15 +421,16 @@ with open("results/results-join-power.csv") as csv_file:
     nodes_8_tests = [o for o in tests if int(o.nodes) == 8]
     nodes_9_tests = [o for o in tests if int(o.nodes) == 9]
 
-    # fig, ax = plt.subplots(nrows=1, ncols=1,figsize=(20,10))
-    # plt.suptitle("Comparison of average join time in networks with various possible parents", fontsize = 16)
+    #fig, ax = plt.subplots(nrows=1, ncols=1,figsize=(20,10))
+    #plt.suptitle("Comparison of average join time in networks with various possible parents including average first EB time", fontsize = 16)
 
     # generate_box_compare_custom_and_classic_jointime(tests, "", ax)
     #generate_box_compare_custom_and_classic_jointime(tests, "", ax)
     # generate_line_compare_custom_and_classic_jointime(tests, "", ax)
-    # generate_bar_compare_custom_and_classic_jointime(tests, "", ax)
+    #generate_bar_compare_custom_and_classic_jointime(tests, "", ax)
+    generate_bar_compare_custom_and_classic_rejoin()
     # generate_bar_compare_custom_and_classic_power_consumption(tests, "", ax)
-    generate_radar_solutions()
+    #generate_radar_solutions()
     # generate_radar_compare_solutions()
 
     #generate_bar_compare_custom_and_classic_jointime(nodes_5_tests, "Seconds", ax[0][1])
@@ -357,5 +440,5 @@ with open("results/results-join-power.csv") as csv_file:
     #generate_bar_compare_custom_and_classic_jointime(nodes_9_tests, "Seconds", ax[1][2])
 
     # plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
-    # plt.show()
-    # fig.savefig(f"plots/test.svg", bbox_inches="tight")
+    #plt.show()
+    #fig.savefig(f"plots/test.svg", bbox_inches="tight")
