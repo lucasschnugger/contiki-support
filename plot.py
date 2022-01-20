@@ -306,10 +306,10 @@ def generate_radar_solutions():
     prop_labels = ['Communication downtime', 'Versatility', 'Data overhead', 'Energy efficiency', 'Feasibility']
     data = [
         # Values correspond to properties as indexed in prop_labels
-        ("Fixed EB broadcast channel", [5, 1, 3, 4, 5]),
-        ("Post association evaluation", [4, 2, 2, 4, 4]),
-        ("EB channel prediction", [4, 5, 2, 5, 3]),
-        ("Physical location triangulation", [1, 2, 2, 2, 1])
+        ("Fixed EB broadcast channel", [2, -2, 0, 1, 2]),
+        ("Post association evaluation", [1, -1, -1, 1, 1]),
+        ("EB channel prediction", [1, 2, -1, 2, 0]),
+        ("Physical location triangulation", [-2, -1, -1, -1, -2])
     ]
 
     fig, axs = plt.subplots(figsize=(12, 10), nrows=2, ncols=2, subplot_kw=dict(projection="radar"))
@@ -321,11 +321,11 @@ def generate_radar_solutions():
     for index, ax in enumerate(axs.flat, start=0):
         if (index >= len(colors)):
             continue
-        ax.set_ylim(0, 6.5)
+        ax.set_ylim(-3, 3.5)
         color = colors[index]
         title = data[index][0]
         sol_data = data[index][1]
-        ax.set_rgrids([1, 2, 3, 4, 5], angle=0)
+        ax.set_rgrids([-2, -1, 0, 1, 2], angle=0)
         ax.set_title(title, weight="bold", size="medium", position=(0.5, 1.1), horizontalalignment="center",
                      verticalalignment="center", fontdict={'color': color}, pad=15)
         ax.plot(factory, sol_data, color=color)
